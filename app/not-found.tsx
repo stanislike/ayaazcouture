@@ -24,7 +24,7 @@ const NotFoundPage = () => {
           className="mt-4 ml-2"
           onClick={() => (window.location.href = "/")}
         >
-          Revenir à l'accueil
+          Revenir à l&rsquo;accueil
         </Button>
       </div>
     </div>
