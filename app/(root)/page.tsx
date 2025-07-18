@@ -3,7 +3,7 @@ import { getLatestProducts } from "@/lib/actions/product.actions";
 // import sampleData from "@/db/sample-data";
 
 export const metadata = {
-  title: "Home",
+  title: "Accueil",
 };
 
 const Homepage = async () => {
