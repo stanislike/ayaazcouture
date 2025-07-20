@@ -24,8 +24,25 @@ export const insertProductSchema = z.object({
 
 //Schema for signing users in
 export const signInFormSchema = z.object({
-  email: z.string().email("l'adresse email est invalide"),
+  email: z.email("l'adresse email est invalide"),
   password: z
     .string()
     .min(6, "Le mot de passe doit comporter au moins 6 caractères"),
 });
+
+//Schema for signing up a user
+export const signUpFormSchema = z
+  .object({
+    name: z.string().min(3, "Le nom doit comporter au moins 3 caractères"),
+    email: z.email("l'adresse email est invalide"),
+    password: z
+      .string()
+      .min(6, "Le mot de passe doit comporter au moins 6 caractères"),
+    confirmPassword: z
+      .string()
+      .min(6, "Le mot de passe doit comporter au moins 6 caractères"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
