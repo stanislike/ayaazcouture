@@ -5,6 +5,7 @@ import { signInFormSchema, signUpFormSchema } from "../validators";
 import { signIn, signOut } from "@/auth";
 import { hashSync } from "bcrypt-ts-edge";
 import { prisma } from "@/db/prisma";
+import { formatError } from "../utils";
 
 // Sign in the user with credentials
 export async function signInWithCredentials(
@@ -72,7 +73,8 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
 
     return {
       success: false,
-      message: "Une erreur est survenue lors de l'inscription !",
+      message:
+        formatError(error) || "Une erreur est survenue lors de l'inscription.",
     };
   }
 }
