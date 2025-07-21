@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { formatNumberWithDecimal } from "./utils";
+import { use } from "react";
 
 const currency = z
   .string()
@@ -46,3 +47,28 @@ export const signUpFormSchema = z
     message: "Les mots de passe ne correspondent pas",
     path: ["confirmPassword"],
   });
+
+//Cart Schemas
+export const cartItemSchema = z.object({
+  productId: z.string().min(1, "Le produit est requis"),
+  name: z.string().min(1, "Le nom du produit est requis"),
+  slug: z.string().min(1, "le slug du produit est requis"),
+  qty: z
+    .number()
+    .int()
+    .nonnegative("La quantité doit être un nombre entier positif"),
+  image: z.string().min(1, "l'image du produit est requise"),
+  price: currency,
+});
+
+export const insertCartSchema = z.object({
+  items: z
+    .array(cartItemSchema)
+    .min(1, "Le panier doit contenir au moins un produit"),
+  itemsPrice: currency,
+  totalPrice: currency,
+  shippingPrice: currency,
+  taxPrice: currency,
+  sessionCartId: z.string().min(1, "L'ID de la session du panier est requis"),
+  userId: z.string().optional().nullable(),
+});
