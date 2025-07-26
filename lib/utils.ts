@@ -55,3 +55,14 @@ export function formatError(error: any) {
 
   return messages.join(". ");
 }
+
+// Round number to two decimal places
+export function round2(num: number | string) {
+  if (typeof num === "number") {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  } else if (typeof num === "string") {
+    return Math.round((Number(num) + Number.EPSILON) * 100) / 100;
+  } else {
+    throw new Error("Invalid input type, expected number or string");
+  }
+}

@@ -3,9 +3,26 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./db/prisma";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compareSync } from "bcrypt-ts-edge";
-import type { NextAuthConfig } from "next-auth";
-import { cookies } from "next/headers";
+import type { NextAuthConfig, Session, User } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import { NextResponse } from "next/server";
+
+interface CustomUser extends User {
+  role: string;
+}
+
+interface CustomSession extends Session {
+  user: CustomUser;
+}
+
+declare module "next-auth" {
+  interface User {
+    role: string;
+  }
+  interface Session {
+    user: CustomUser;
+  }
+}
 
 export const config: NextAuthConfig = {
   pages: {
@@ -56,13 +73,20 @@ export const config: NextAuthConfig = {
   ],
 
   callbacks: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async session({ session, user, trigger, token }: any) {
-      session.user.id = token.sub;
-      session.user.role = token.role;
-      session.user.name = token.name;
-
-      console.log(token);
+    async session({
+      session,
+      user,
+      trigger,
+      token,
+    }: {
+      session: CustomSession;
+      user: CustomUser;
+      trigger?: "update" | string;
+      token: JWT & { role?: string };
+    }) {
+      session.user.id = token.sub as string;
+      session.user.role = token.role as string;
+      session.user.name = token.name as string;
 
       if (trigger === "update") {
         session.user.name = user.name;
@@ -70,7 +94,17 @@ export const config: NextAuthConfig = {
 
       return session;
     },
-    async jwt({ token, user, trigger, session }: any) {
+    async jwt({
+      token,
+      user,
+      trigger,
+      session,
+    }: {
+      token: JWT & { role?: string };
+      user?: CustomUser;
+      trigger?: "signIn" | "signUp" | "update";
+      session?: CustomSession;
+    }) {
       // assign user field to token
       if (user) {
         token.role = user.role;
@@ -88,7 +122,7 @@ export const config: NextAuthConfig = {
       }
       return token;
     },
-    authorized({ request, auth }: any) {
+    authorized({ request, auth }) {
       //Check for session cart cookie
       if (!request.cookies.get("sessionCartId")) {
         // generate new session cart id cookie
