@@ -2,13 +2,42 @@
 
 import { CartItem } from "@/types";
 import { cookies } from "next/headers";
-import { convertToPlainObject, formatError } from "../utils";
+import {
+  convertToPlainObject,
+  formatError,
+  roundToTwoDecimalPlaces,
+} from "../utils";
 import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
-import { get } from "http";
-import { cartItemSchema } from "../validators";
+import { cartItemSchema, insertCartSchema } from "../validators";
+import { revalidatePath } from "next/cache";
 
-export async function addItemToCart(data: CartItem) {
+//Calc cart prices
+const calcPrice = (items: CartItem[]) => {
+  const itemsPrice = roundToTwoDecimalPlaces(
+      items.reduce((acc, item) => acc + Number(item.price) * item.qty, 0)
+    ),
+    // Free shipping for orders over 100
+    shippingPrice = roundToTwoDecimalPlaces(itemsPrice > 100 ? 0 : 10),
+    // Assuming a 15% tax rate
+    taxPrice = roundToTwoDecimalPlaces(itemsPrice * 0.15),
+    totalPrice = roundToTwoDecimalPlaces(itemsPrice + shippingPrice + taxPrice);
+  return {
+    itemsPrice: itemsPrice.toFixed(2),
+    shippingPrice: shippingPrice.toFixed(2),
+    taxPrice: taxPrice.toFixed(2),
+    totalPrice: totalPrice.toFixed(2),
+  };
+};
+
+interface AddToCartResponse {
+  success: boolean;
+  message: string;
+}
+
+export async function addItemToCart(
+  data: CartItem
+): Promise<AddToCartResponse> {
   try {
     // Get the session cart ID from cookies
     const sessionCartId = (await cookies()).get("sessionCartId")?.value;
@@ -28,23 +57,31 @@ export async function addItemToCart(data: CartItem) {
     const product = await prisma.product.findFirst({
       where: { id: item.productId },
     });
+    if (!product) throw new Error("Product not found");
 
-    //Testing
-    console.log({
-      sessionCartId: sessionCartId,
-      userId: userId,
-      "Item requested": item,
-      "Product found": product,
-    });
+    if (!cart) {
+      // Create a cart if it doesn't exist
+      const newCart = insertCartSchema.parse({
+        userId: userId,
+        items: [item],
+        sessionCartId: sessionCartId,
+        ...calcPrice([item]),
+      });
 
+      //Add to database
+      await prisma.cart.create({
+        data: newCart,
+      });
+
+      //Revalidate product page
+      revalidatePath(`/product/${product.slug}`);
+    }
     return {
-      data,
       success: true,
-      message: "Produit ajouté au panier",
+      message: "Produit ajouté au panier avec succès",
     };
   } catch (error) {
     return {
-      data,
       success: false,
       message: formatError(error),
     };
