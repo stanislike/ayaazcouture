@@ -11,6 +11,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
 import { cartItemSchema, insertCartSchema } from "../validators";
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 
 //Calc cart prices
 const calcPrice = (items: CartItem[]) => {
@@ -75,11 +76,54 @@ export async function addItemToCart(
 
       //Revalidate product page
       revalidatePath(`/product/${product.slug}`);
+      return {
+        success: true,
+        message: `${product.name} a été ajouté au panier avec succès !`,
+      };
+    } else {
+      const existingItem = (cart.items as CartItem[]).find(
+        (x) => x.productId === item.productId
+      );
+
+      if (existingItem) {
+        // Check if stock is sufficient
+        if (product.stock < existingItem.qty + 1) {
+          throw new Error(
+            `Stock insuffisant pour le produit ${product.name}. Quantité disponible: ${product.stock}`
+          );
+        }
+
+        // Increase qty of existing item
+        (cart.items as CartItem[]).find(
+          (x) => x.productId === item.productId
+        )!.qty = existingItem.qty + 1;
+      } else {
+        if (product.stock < 1) {
+          throw new Error(
+            `Stock insuffisant pour le produit ${product.name}. Quantité disponible: ${product.stock}`
+          );
+        }
+        cart.items.push(item);
+      }
+
+      // Save to database
+      await prisma.cart.update({
+        where: { id: cart.id },
+        data: {
+          items: cart.items as Prisma.CartUpdateitemsInput[],
+          ...calcPrice(cart.items as CartItem[]),
+        },
+      });
+
+      revalidatePath(`/product/${product.slug}`);
+
+      return {
+        success: true,
+        message: `${product.name} ${
+          existingItem ? "a été mis à jour" : "a été ajouté au panier"
+        } avec succès !`,
+      };
     }
-    return {
-      success: true,
-      message: "Produit ajouté au panier avec succès",
-    };
   } catch (error) {
     return {
       success: false,

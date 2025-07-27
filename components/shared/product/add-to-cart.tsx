@@ -16,7 +16,7 @@ const AddToCart = ({ item }: { item: CartItem }) => {
       return;
     }
 
-    toast.success(`${item.name} a été ajouté au panier`, {
+    toast.success(res.message, {
       action: {
         label: "Voir le panier",
         onClick: () => router.push("/cart"),
