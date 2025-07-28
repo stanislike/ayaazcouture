@@ -184,7 +184,7 @@ export async function removeItemFromCart(productId: string) {
         (cart.items as CartItem[]).find((x) => x.productId === productId)
           ? "a été mis à jour"
           : "a été retiré du panier"
-      }avec succès !`,
+      } avec succès !`,
     };
   } catch (error) {
     return {
