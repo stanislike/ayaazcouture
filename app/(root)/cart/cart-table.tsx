@@ -1,18 +1,18 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useSonner } from "sonner";
-import { useTransition } from "react";
-import { addItemToCart, removeItemFromCart } from "@/lib/actions/cart.action";
-import { ArrowRight, Loader, Minus, Plus } from "lucide-react";
+// import { useRouter } from "next/navigation";
+// import { useSonner } from "sonner";
+// import { useTransition } from "react";
+// import { addItemToCart, removeItemFromCart } from "@/lib/actions/cart.action";
+// import { ArrowRight, Loader, Minus, Plus } from "lucide-react";
 
 import { Cart } from "@/types";
 
 import Link from "next/link";
-import Image from "next/image";
+// import Image from "next/image";
 
 const CartTable = ({ cart }: { cart?: Cart }) => {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  //   const router = useRouter();
+  //   const [isPending, startTransition] = useTransition();
 
   return (
     <>
