@@ -16,3 +16,11 @@ export const signUpDefaultValues = {
   password: "",
   confirmPassword: "",
 };
+
+export const shippingAddressDefaultValues = {
+  fullName: "John Doe",
+  streetAddress: "20 rue Paul Verlaine",
+  city: "Paris",
+  postalCode: "75015",
+  country: "France",
+};

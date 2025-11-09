@@ -1,8 +1,8 @@
 "use client";
-// import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { addItemToCart, removeItemFromCart } from "@/lib/actions/cart.action";
-import { Loader, Minus, Plus } from "lucide-react";
+import { ArrowRight, Loader, Minus, Plus } from "lucide-react";
 
 import { Cart } from "@/types";
 
@@ -19,9 +19,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils";
 
 const CartTable = ({ cart }: { cart?: Cart }) => {
-  //   const router = useRouter();
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -39,7 +41,7 @@ const CartTable = ({ cart }: { cart?: Cart }) => {
                 <TableRow>
                   <TableHead>Produit</TableHead>
                   <TableHead className="text-center">Quantité</TableHead>
-                  <TableHead className="text-right">Prix</TableHead>
+                  <TableHead className="text-right">Prix unitaire</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -108,6 +110,31 @@ const CartTable = ({ cart }: { cart?: Cart }) => {
               </TableBody>
             </Table>
           </div>
+
+          <Card>
+            <CardContent className="p-4 gap-4">
+              <div className="pb-3 text-xl">
+                Total estimé ({cart.items.reduce((a, c) => a + c.qty, 0)}):
+                <span className="font-bold">
+                  {formatCurrency(cart.itemsPrice)}
+                </span>
+              </div>
+              <Button
+                className="w-full"
+                disabled={isPending}
+                onClick={() =>
+                  startTransition(() => router.push("/shipping-address"))
+                }
+              >
+                {isPending ? (
+                  <Loader className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}{" "}
+                Procéder au payement
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       )}
     </>
